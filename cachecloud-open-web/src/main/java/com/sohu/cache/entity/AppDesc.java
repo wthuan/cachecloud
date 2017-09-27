@@ -5,6 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import com.alibaba.fastjson.JSONObject;
+import com.sohu.cache.constant.AppDescEnum;
+import com.sohu.cache.constant.AppDescEnum.AppImportantLevel;
 import com.sohu.cache.constant.AppStatusEnum;
 import com.sohu.cache.util.ConstUtils;
 
@@ -22,6 +25,11 @@ public class AppDesc implements Serializable {
      * 应用id
      */
     private long appId;
+    
+    /**
+     * 应用秘钥
+     */
+    private String appKey;
 
     /**
      * 应用名称
@@ -109,9 +117,24 @@ public class AppDesc implements Serializable {
     private int memAlertValue;
     
     /**
+     * 客户端连接数报警阀值
+     */
+    private int clientConnAlertValue;
+    
+    /**
      * 客户端机器机房
      */
     private String clientMachineRoom;
+    
+    /**
+     * redis密码
+     */
+    private String password;
+    
+    /**
+     * 重要度，默认重要
+     */
+    private int importantLevel = AppImportantLevel.IMPORTANT.getValue();
 
     public long getAppId() {
         return appId;
@@ -261,6 +284,38 @@ public class AppDesc implements Serializable {
     public void setClientMachineRoom(String clientMachineRoom) {
         this.clientMachineRoom = clientMachineRoom;
     }
+    
+    public String getAppKey() {
+        return appKey;
+    }
+
+    public void setAppKey(String appKey) {
+        this.appKey = appKey;
+    }
+
+    public int getClientConnAlertValue() {
+        return clientConnAlertValue;
+    }
+
+    public void setClientConnAlertValue(int clientConnAlertValue) {
+        this.clientConnAlertValue = clientConnAlertValue;
+    }
+    
+    public int getImportantLevel() {
+        return importantLevel;
+    }
+
+    public void setImportantLevel(int importantLevel) {
+        this.importantLevel = importantLevel;
+    }
+    
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     /**
      * 应用运行天数
@@ -295,14 +350,10 @@ public class AppDesc implements Serializable {
         return "";
     }
 
+
     @Override
     public String toString() {
-        return "AppDesc [appId=" + appId + ", name=" + name + ", userId=" + userId + ", status=" + status + ", intro="
-                + intro + ", createTime=" + createTime + ", passedTime=" + passedTime + ", type=" + type
-                + ", typeDesc=" + typeDesc + ", officer=" + officer + ", verId=" + verId + ", isTest=" + isTest
-                + ", hasBackStore=" + hasBackStore + ", needPersistence=" + needPersistence + ", forecaseQps="
-                + forecaseQps + ", needHotBackUp=" + needHotBackUp + ", forecastObjNum=" + forecastObjNum
-                + ", memAlertValue=" + memAlertValue + ", clientMachineRoom=" + clientMachineRoom + "]";
+        return JSONObject.toJSONString(this);
     }
 
     public String getStatusDesc() {
@@ -311,6 +362,39 @@ public class AppDesc implements Serializable {
             return appStatusEnum.getInfo();
         }
         return "";
+    }
+
+
+    /**
+     * 是否下线
+     * @return
+     */
+    public boolean isOffline() {
+        return status == AppStatusEnum.STATUS_OFFLINE.getStatus();
+    }
+
+    /**
+     * 是否是测试
+     * @return
+     */
+    public boolean isTest() {
+        return isTest == AppDescEnum.AppTest.IS_TEST.getValue();
+    }
+
+    /**
+     * 非常重要
+     * @return
+     */
+    public boolean isVeryImportant() {
+        return importantLevel == AppDescEnum.AppImportantLevel.VERY_IMPORTANT.getValue();
+    }
+    
+    /**
+     * 超级重要
+     * @return
+     */
+    public boolean isSuperImportant() {
+        return importantLevel == AppDescEnum.AppImportantLevel.SUPER_IMPORTANT.getValue();
     }
 
 }

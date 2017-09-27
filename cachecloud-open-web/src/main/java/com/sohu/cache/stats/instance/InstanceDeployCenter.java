@@ -7,17 +7,19 @@ public interface InstanceDeployCenter {
 
     /**
      * 启动已经存在的实例
+     * @param appId
      * @param instanceId
      * @return
      */
-    boolean startExistInstance(int instanceId);
+    boolean startExistInstance(long appId, int instanceId);
 
     /**
      * 下线已经存在的实例
+     * @param appId
      * @param instanceId
      * @return
      */
-    boolean shutdownExistInstance(int instanceId);
+    boolean shutdownExistInstance(long appId, int instanceId);
     
     
     /**
@@ -27,5 +29,18 @@ public interface InstanceDeployCenter {
      * @return
      */
     String showInstanceRecentLog(int instanceId, int maxLineNum);
+
+    /**
+     * 修改实例配置
+     * @param appId
+     * @param appAuditId
+     * @param host
+     * @param port
+     * @param instanceConfigKey
+     * @param instanceConfigValue
+     * @return
+     */
+    boolean modifyInstanceConfig(long appId, Long appAuditId, String host, int port, String instanceConfigKey,
+            String instanceConfigValue);
 
 }

@@ -20,11 +20,6 @@ public class InstanceInfo implements Serializable {
     private int id;
 
     /**
-     * 用于表示主从，如果是主，该值为0，如果是从，则值为主的id
-     */
-    private int parentId;
-
-    /**
      * 应用id
      */
     private long appId;
@@ -75,6 +70,8 @@ public class InstanceInfo implements Serializable {
     private int masterPort;
 
     private String roleDesc;
+    
+    private int groupId;
 
     public int getId() {
         return id;
@@ -82,14 +79,6 @@ public class InstanceInfo implements Serializable {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(int parentId) {
-        this.parentId = parentId;
     }
 
     public long getAppId() {
@@ -181,7 +170,6 @@ public class InstanceInfo implements Serializable {
     public String toString() {
         return "InstanceInfo{" +
                 "id=" + id +
-                ", parentId=" + parentId +
                 ", appId=" + appId +
                 ", hostId=" + hostId +
                 ", ip='" + ip + '\'' +
@@ -191,6 +179,7 @@ public class InstanceInfo implements Serializable {
                 ", conn=" + conn +
                 ", cmd='" + cmd + '\'' +
                 ", type=" + type +
+                ", group=" + groupId +
                 '}';
     }
 
@@ -216,6 +205,14 @@ public class InstanceInfo implements Serializable {
 
     public void setMasterPort(int masterPort) {
         this.masterPort = masterPort;
+    }
+
+    public int getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(int groupId) {
+        this.groupId = groupId;
     }
 
     public String getStatusDesc() {
@@ -254,6 +251,10 @@ public class InstanceInfo implements Serializable {
         } else {
             return roleDesc;
         }
+    }
+    
+    public String getHostPort() {
+    	return ip + ":" + port;
     }
 
 }

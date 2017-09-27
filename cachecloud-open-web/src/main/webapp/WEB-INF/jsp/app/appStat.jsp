@@ -10,6 +10,7 @@ var appId = '${appId}';
 var chartType = 'line';
 var chartParams = "&startDate="+startDate+"&endDate="+endDate;
 var chartParamsCompare = "&startDate="+yesterDate+"&endDate="+startDate;
+var betweenParams = "&startDate="+yesterDate+"&endDate="+endDate;
 var appTotalMem = '${appDetail.mem}';
 Highcharts.setOptions({
 	global : {
@@ -48,6 +49,7 @@ Highcharts.setOptions({
 				<h4>
 				全局信息&nbsp;&nbsp;&nbsp;
 				<button type="button" id="appScaleApplyBtn" class="btn btn-info" data-target="#appScaleApplyModal" data-toggle="modal">申请扩容</button>
+				<button type="button" class="btn btn-info" data-target="#appConfigChangeModal" data-toggle="modal" href="#">申请修改配置</button>
 				<a target="_blank" href="/client/show/index.do?appId=${appId}" class="btn btn-info" role="button">客户端统计</a>
 				</h4>
 			</div>
@@ -222,31 +224,20 @@ Highcharts.setOptions({
 			$(document).ready(
 				function() {
 					var options = getOption("containerCommands", "<b>全命令统计</b>", "次数");
-					var commandsUrl = "/admin/app/getCommandStats.do?appId=" + appId + chartParams;
+					var commandsUrl = "/admin/app/getMutiDatesCommandStats.json?appId=" + appId + betweenParams;
 					$.ajax({
 						type : "get",
 						url : commandsUrl,
-						async : false,
+						async : true,
 						success : function(data) {
-							var nameLegend = "命令趋势图(" + startDate + ")";
-							var finalPoints = getSeriesPoints(data, nameLegend);
-							options.series.push(finalPoints);
+							var dates = new Array();
+							dates.push(startDate); 
+							dates.push(yesterDate);
+							pushOptionSeries(options, data, dates, "命令趋势图");
+							new Highcharts.Chart(options);
 						}
 					});
 					
-					//比较
-					var commandsUrlCompare = "/admin/app/getCommandStats.do?appId=" + appId + chartParamsCompare + "&addDay=1";
-					$.ajax({
-						type : "get",
-						url : commandsUrlCompare,
-						async : false,
-						success : function(data) {
-							var nameLegend = "命令趋势图(" + yesterDate + ")";
-							var finalPoints = getSeriesPoints(data, nameLegend);
-							options.series.push(finalPoints);
-						}
-					});
-					new Highcharts.Chart(options);
 			 });
 		}else{
 			$(document).ready(
@@ -256,14 +247,14 @@ Highcharts.setOptions({
 					$.ajax({
 						type : "get",
 						url : commandsUrl,
-						async : false,
+						async : true,
 						success : function(data) {
 							var nameLegend = "命令趋势图";
 							var finalPoints = getSeriesPoints(data, nameLegend);
 							options.series.push(finalPoints);
+							new Highcharts.Chart(options);
 						}
 					});
-					new Highcharts.Chart(options);
 			 });
 		}
 	</script>
@@ -279,48 +270,36 @@ Highcharts.setOptions({
 			$(document).ready(
 				function() {
 					var options = getOption("containerHits", "<b>命中统计</b>", "次数");
-					var commandsUrl = "/admin/app/getAppStats.do?appId=" + appId + "&statName=hits"+chartParams;
+					var commandsUrl = "/admin/app/getMutiDatesAppStats.json?appId=" + appId + "&statName=hits"+betweenParams;
 					$.ajax({
 						type : "get",
 						url : commandsUrl,
-						async : false,
+						async : true,
 						success : function(data) {
-							var nameLegend = "命中趋势图(" + startDate + ")";
-							var finalPoints = getSeriesPoints(data, nameLegend);
-							options.series.push(finalPoints);
+							var dates = new Array();
+							dates.push(startDate); 
+							dates.push(yesterDate);
+							pushOptionSeries(options, data, dates, "命中趋势图");
+							new Highcharts.Chart(options);
 						}
 					});
-					
-					//比较
-					var commandsUrlCompare = "/admin/app/getAppStats.do?appId=" + appId + "&statName=hits"+chartParamsCompare + "&addDay=1";
-					$.ajax({
-						type : "get",
-						url : commandsUrlCompare,
-						async : false,
-						success : function(data) {
-							var nameLegend = "命中趋势图(" + yesterDate + ")";
-							var finalPoints = getSeriesPoints(data, nameLegend);
-							options.series.push(finalPoints);
-						}
-					});
-					new Highcharts.Chart(options);
 			 });
 		}else{
 			$(document).ready(
 				function() {
 					var options = getOption("containerHits", "<b>命中统计</b>", "次数");
-					var commandsUrl = "/admin/app/getAppStats.do?appId=" + appId + "&statName=hits"+chartParams;
+					var commandsUrl = "/admin/app/getAppStats.json?appId=" + appId + "&statName=hits"+chartParams + "&timeDimensionalityIndex=1";
 					$.ajax({
 						type : "get",
 						url : commandsUrl,
-						async : false,
+						async : true,
 						success : function(data) {
 							var nameLegend = "命中趋势图";
 							var finalPoints = getSeriesPoints(data, nameLegend);
 							options.series.push(finalPoints);
+							new Highcharts.Chart(options);
 						}
 					});
-					new Highcharts.Chart(options);
 			 });
 		}
 	</script>
@@ -333,36 +312,32 @@ Highcharts.setOptions({
 			$(document).ready(
 				function() {
 					var options = getOption("containerNet", "网络流量<a href='"+allInstanceNetStatUrl+"' target='_blank'>(查看实例流量)</a>", "");
-					//input流量
-					var netInputUrl = "/admin/app/getAppStats.do?appId=" + appId + "&statName=netInput" + chartParams;
-					var unit;
+					//网络流量
+					var netUrl = "/admin/app/getMutiStatAppStats.json?appId=" + appId + "&statName=netInput,netOutput" + chartParams;
 					$.ajax({
 						type : "get",
-						url : netInputUrl,
-						async : false,
+						url : netUrl,
+						async : true,
 						success : function(data) {
-							var nameLegend = "net_input";
-							var finalPoints = getNetPoints(data, nameLegend);
-							options.yAxis.title.text = finalPoints.unitTxt;
-							//获取单位
-							unit = finalPoints.unit;
-							options.series.push(finalPoints);
+
+							var dataObject = eval("(" + data.data + ")");
+							var inputDataArr = dataObject["netInput"];
+
+							//1.input
+							var inputPoints = getNetPoints(inputDataArr, "net_input");
+							//确认单位
+							options.yAxis.title.text = inputPoints.unitTxt;
+							var unit = inputPoints.unit;
+							options.series.push(inputPoints);
+							
+							//2.output
+							var outputDataArr = dataObject["netOutput"];
+							var outputPoints = getNetPoints(outputDataArr, "net_output", unit);
+							options.series.push(outputPoints);
+
+							new Highcharts.Chart(options);
 						}
 					});
-					
-					//output流量
-					var netOutputUrl = "/admin/app/getAppStats.do?appId=" + appId + "&statName=netOutput" + chartParams;
-					$.ajax({
-						type : "get",
-						url : netOutputUrl,
-						async : false,
-						success : function(data) {
-							var nameLegend = "net_output";
-							var finalPoints = getNetPoints(data, nameLegend, unit);
-							options.series.push(finalPoints);
-						}
-					});
-					new Highcharts.Chart(options);
 			 });
 	</script>
 	<div id="containerNet"
@@ -381,16 +356,16 @@ Highcharts.setOptions({
 					$.ajax({
 						type : "get",
 						url : commandsUrl,
-						async : false,
+						async : true,
 						success : function(data) {
 							var nameLegend = "内存使用量(" + startDate + ")";
 							var finalPoints = getSeriesPoints(data, nameLegend, "M");
 							options.series.push(finalPoints);
 							var maxMemoryPoints = getSeriesPoints(data, "应用总内存", "M", parseInt(appTotalMem));
 							options.series.push(maxMemoryPoints);
+							new Highcharts.Chart(options);
 						}
 					});
-					new Highcharts.Chart(options);
 			 });
 		/*}*/
 		/*
@@ -419,6 +394,54 @@ Highcharts.setOptions({
 		style="min-width: 310px; height: 350px; margin: 0 auto"></div>
 	
 	
+	<!-- 客户端连接数相关 -->
+	<script type="text/javascript">
+		//查询一天出每分钟数据
+			$(document).ready(
+				function() {
+					var options = getOption("containerClients", "<b>客户端连接统计</b>", "个");
+					var commandsUrl = "/admin/app/getMutiDatesAppStats.json?appId=" + appId + "&statName=connectedClient"+betweenParams;
+					$.ajax({
+						type : "get",
+						url : commandsUrl,
+						async : true,
+						success : function(data) {
+							var dates = new Array();
+							dates.push(startDate); 
+							dates.push(yesterDate);
+							pushOptionSeries(options, data, dates, "客户端连接趋势图", "个");
+							new Highcharts.Chart(options);
+						}
+					});
+			 });
+	</script>
+	<div id="containerClients"
+		style="min-width: 310px; height: 350px; margin: 0 auto"></div>
+	
+	
+	<!-- bsize相关 -->
+	<script type="text/javascript">
+		//查询一天出每分钟数据
+			$(document).ready(
+				function() {
+					var options = getOption("containerDbsize", "<b>键个数统计</b>", "个");
+					var commandsUrl = "/admin/app/getMutiDatesAppStats.json?appId=" + appId + "&statName=objectSize"+betweenParams;
+					$.ajax({
+						type : "get",
+						url : commandsUrl,
+						async : true,
+						success : function(data) {
+							var dates = new Array();
+							dates.push(startDate); 
+							dates.push(yesterDate);
+							pushOptionSeries(options, data, dates, "键个数趋势图", "个");
+							new Highcharts.Chart(options);
+						}
+					});
+			 });
+	</script>
+	<div id="containerDbsize"
+		style="min-width: 310px; height: 350px; margin: 0 auto"></div>
 	
 	<br/>
 	<br/>
@@ -468,6 +491,63 @@ Highcharts.setOptions({
 				<div class="modal-footer">
 					<button type="button" data-dismiss="modal" class="btn" >Close</button>
 					<button type="button" class="btn red" onclick="appScaleApply('${appDetail.appDesc.appId}')">Ok</button>
+				</div>
+			
+			</form>
+		</div>
+	</div>
+</div>
+
+<div id="appConfigChangeModal" class="modal fade" tabindex="-1" data-width="400">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+				<h4 class="modal-title">应用配置修改</h4>
+			</div>
+			
+			<form class="form-horizontal form-bordered form-row-stripped">
+				<div class="modal-body">
+					<div class="row">
+						<!-- 控件开始 -->
+						<div class="col-md-12">
+							<!-- form-body开始 -->
+							<div class="form-body">
+								
+								<div class="form-group">
+									<label class="control-label col-md-3">配置项:</label>
+									<div class="col-md-8">
+										<input type="text" name="appConfigKey" id="appConfigKey" placeholder="例如:maxclients" class="form-control" />
+									</div>
+								</div>
+								
+								<div class="form-group">
+									<label class="control-label col-md-3">配置值:</label>
+									<div class="col-md-8">
+										<input type="text" name="appConfigValue" id="appConfigValue" placeholder="例如:15000" class="form-control">
+									</div>
+								</div>
+
+                                <div class="form-group">
+                                    <label class="control-label col-md-3">修改原因:</label>
+                                    <div class="col-md-8">
+                                        <textarea name="appConfigReason" id="appConfigReason" placeholder="例如：修改原因:1.需要更多的连接数。" class="form-control"></textarea>
+                                        <%--<input type="text" name="appConfigReason" id="appConfigReason" placeholder="例如：修改原因:1.需要更多的连接数。" class="form-control">--%>
+                                    </div>
+                                </div>
+								
+							</div>
+							<!-- form-body 结束 -->
+						</div>
+						<div id="appConfigChangeInfo"></div>
+						<!-- 控件结束 -->
+					</div>
+				</div>
+				
+				<div class="modal-footer">
+					<button type="button" data-dismiss="modal" class="btn" >Close</button>
+					<button type="button" id="appConfigChangeBtn" class="btn red" onclick="appConfigChange('${appId}','${instanceId}')">Ok</button>
 				</div>
 			
 			</form>

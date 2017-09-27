@@ -16,6 +16,9 @@ public class SymbolConstant {
     public final static String BACK_SLASH = "\\";
     /** : */
     public final static String COLON = ":";
+    public final static String SPACE = " ";
+    public final static String ENTER = System.lineSeparator();
+
 
     /** ; */
     public final static String SEMICOLON = ";";

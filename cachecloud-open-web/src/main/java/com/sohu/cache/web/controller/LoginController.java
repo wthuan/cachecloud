@@ -1,5 +1,6 @@
 package com.sohu.cache.web.controller;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -15,6 +16,7 @@ import com.sohu.cache.entity.LoginResult;
 import com.sohu.cache.util.ConstUtils;
 import com.sohu.cache.web.enums.AdminEnum;
 import com.sohu.cache.web.enums.LoginEnum;
+import com.sohu.cache.web.service.UserLoginStatusService;
 import com.sohu.cache.web.util.LoginUtil;
 
 /**
@@ -26,6 +28,9 @@ import com.sohu.cache.web.util.LoginUtil;
 @Controller
 @RequestMapping("manage")
 public class LoginController extends BaseController {
+    
+    @Resource(name = "userLoginStatusService")
+    private UserLoginStatusService userLoginStatusService;
 
     /**
      * 用户登录界面
@@ -34,7 +39,8 @@ public class LoginController extends BaseController {
      * @return
      */
     @RequestMapping(value = "/login", method = RequestMethod.GET)
-    public ModelAndView init(HttpServletRequest request) {
+    public ModelAndView init(HttpServletRequest request, HttpServletResponse response, Model model) {
+        model.addAttribute(ConstUtils.RREDIRECT_URL_PARAM, request.getParameter(ConstUtils.RREDIRECT_URL_PARAM));
         return new ModelAndView("manage/login");
     }
 
@@ -55,9 +61,13 @@ public class LoginController extends BaseController {
         loginResult.setLoginEnum(LoginEnum.LOGIN_WRONG_USER_OR_PASSWORD);
 
         AppUser userModel = null;
-        if (ConstUtils.SUPER_ADMIN_NAME.equals(userName) && ConstUtils.SUPER_ADMIN_PASS.equals(password)) {
+        if (ConstUtils.SUPER_ADMIN_NAME.equals(userName)) {
             userModel = userService.getByName(userName);
-            loginResult.setLoginEnum(LoginEnum.LOGIN_SUCCESS);
+            if (userModel != null && ConstUtils.SUPER_ADMIN_PASS.equals(password)) {
+                loginResult.setLoginEnum(LoginEnum.LOGIN_SUCCESS);
+            } else {
+                loginResult.setLoginEnum(LoginEnum.LOGIN_WRONG_USER_OR_PASSWORD);
+            }
         } else {
             if (LoginUtil.passportCheck(userName, password)) {
                 // 同时要验证是否有cachecloud权限
@@ -78,9 +88,9 @@ public class LoginController extends BaseController {
                 }
             }
         }
-        
+        // 登录成功写入登录状态
         if (loginResult.getLoginEnum().equals(LoginEnum.LOGIN_SUCCESS)) {
-            request.getSession().setAttribute(ConstUtils.LOGIN_USER_SESSION_NAME, userModel);
+            userLoginStatusService.addLoginStatus(request, response, userModel.getId().toString());
         }
         model.addAttribute("success", loginResult.getLoginEnum().value());
         model.addAttribute("admin", loginResult.getAdminEnum().value());
@@ -94,8 +104,8 @@ public class LoginController extends BaseController {
      * @return
      */
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
-    public ModelAndView logout(HttpServletRequest reqeust, HttpServletResponse response) {
-        reqeust.getSession().removeAttribute(ConstUtils.LOGIN_USER_SESSION_NAME);
+    public ModelAndView logout(HttpServletRequest request, HttpServletResponse response) {
+        userLoginStatusService.removeLoginStatus(request, response);
         return new ModelAndView("redirect:/manage/login");
     }
 

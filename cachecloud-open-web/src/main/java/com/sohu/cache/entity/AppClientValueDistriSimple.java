@@ -13,11 +13,6 @@ import com.sohu.tv.jedis.stat.enums.ValueSizeDistriEnum;
 public class AppClientValueDistriSimple {
 
     /**
-     * 值分布值
-     */
-    private String distributeValue;
-
-    /**
      * 值分布类型
      */
     private int distributeType;
@@ -25,15 +20,7 @@ public class AppClientValueDistriSimple {
     /**
      * 调用次数
      */
-    private int count;
-
-    public String getDistributeValue() {
-        return distributeValue;
-    }
-
-    public void setDistributeValue(String distributeValue) {
-        this.distributeValue = distributeValue;
-    }
+    private long count;
 
     public int getDistributeType() {
         return distributeType;
@@ -43,16 +30,18 @@ public class AppClientValueDistriSimple {
         this.distributeType = distributeType;
     }
 
-    public int getCount() {
+
+    public long getCount() {
         return count;
     }
 
-    public void setCount(int count) {
+    public void setCount(long count) {
         this.count = count;
     }
 
     public String getDistributeDesc() {
-        return  ValueSizeDistriEnum.getByValue(distributeValue).getInfo();
+        ValueSizeDistriEnum valueSizeDistriEnum = ValueSizeDistriEnum.getByType(distributeType);
+        return valueSizeDistriEnum == null ? "" : valueSizeDistriEnum.getInfo();
     }
     
 

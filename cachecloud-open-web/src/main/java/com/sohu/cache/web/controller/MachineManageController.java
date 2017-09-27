@@ -1,14 +1,17 @@
 package com.sohu.cache.web.controller;
 
+import com.sohu.cache.constant.MachineInfoEnum;
 import com.sohu.cache.entity.AppDesc;
 import com.sohu.cache.entity.InstanceInfo;
 import com.sohu.cache.entity.InstanceStats;
 import com.sohu.cache.entity.MachineInfo;
 import com.sohu.cache.entity.MachineStats;
 import com.sohu.cache.machine.MachineDeployCenter;
+import com.sohu.cache.util.ConstUtils;
 import com.sohu.cache.util.TypeUtil;
 import com.sohu.cache.web.enums.SuccessEnum;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.springframework.stereotype.Controller;
@@ -43,9 +46,12 @@ public class MachineManageController extends BaseController{
     public ModelAndView doMachineList(HttpServletRequest request,
                                 HttpServletResponse response, Model model, String ipLike) {
         List<MachineStats> machineList = machineCenter.getMachineStats(ipLike);
+        Map<String, Integer> machineInstanceCountMap = machineCenter.getMachineInstanceCountMap();
         model.addAttribute("list", machineList);
         model.addAttribute("ipLike", ipLike);
         model.addAttribute("machineActive", SuccessEnum.SUCCESS.value());
+        model.addAttribute("collectAlert", "(请等待" + ConstUtils.MACHINE_STATS_CRON_MINUTE + "分钟)");
+        model.addAttribute("machineInstanceCountMap", machineInstanceCountMap);
         return new ModelAndView("manage/machine/list");
     }
     
@@ -69,27 +75,42 @@ public class MachineManageController extends BaseController{
         return new ModelAndView("manage/machine/machineInstances");
     }
     
+    /**
+     * 检查机器下是否有存活的实例
+     * @param ip
+     * @return
+     */
+    @RequestMapping(value = "/checkMachineInstances")
+    public ModelAndView doCheckMachineInstances(HttpServletRequest request,
+                                HttpServletResponse response, Model model, String ip) {
+        List<InstanceInfo> instanceList = machineCenter.getMachineInstanceInfo(ip);
+        model.addAttribute("machineHasInstance", CollectionUtils.isNotEmpty(instanceList));
+        return new ModelAndView("");
+    }
+    
 
     @RequestMapping(value = "/add", method = {RequestMethod.POST})
     public ModelAndView doAdd(HttpServletRequest request,
                               HttpServletResponse response, Model model) {
-        int id = NumberUtils.toInt(request.getParameter("id"), 0);
-        MachineInfo machineInfo = null;
-        if (id > 0) {
-        } else {
-            machineInfo = new MachineInfo();
-            machineInfo.setIp(request.getParameter("ip"));
-            machineInfo.setRoom(request.getParameter("room"));
-            machineInfo.setMem(NumberUtils.toInt(request.getParameter("mem"), 0));
-            machineInfo.setCpu(NumberUtils.toInt(request.getParameter("cpu"), 0));
-            machineInfo.setVirtual(NumberUtils.toInt(request.getParameter("virtual"), 0));
-            machineInfo.setRealIp(request.getParameter("realIp"));
-            Date date = new Date();
-            machineInfo.setServiceTime(date);
-            machineInfo.setModifyTime(date);
-            boolean isSuccess = machineDeployCenter.addMachine(machineInfo);
-            model.addAttribute("result", isSuccess);
-        }
+        MachineInfo machineInfo = new MachineInfo();
+        machineInfo.setIp(request.getParameter("ip"));
+        machineInfo.setRoom(request.getParameter("room"));
+        machineInfo.setMem(NumberUtils.toInt(request.getParameter("mem"), 0));
+        machineInfo.setCpu(NumberUtils.toInt(request.getParameter("cpu"), 0));
+        machineInfo.setVirtual(NumberUtils.toInt(request.getParameter("virtual"), 0));
+        machineInfo.setRealIp(request.getParameter("realIp"));
+        machineInfo.setType(NumberUtils.toInt(request.getParameter("machineType"), 0));
+        machineInfo.setExtraDesc(request.getParameter("extraDesc"));
+        machineInfo.setCollect(NumberUtils.toInt(request.getParameter("collect"), 1));
+        
+        Date date = new Date();
+        machineInfo.setSshUser(ConstUtils.USERNAME);
+        machineInfo.setSshPasswd(ConstUtils.PASSWORD);
+        machineInfo.setServiceTime(date);
+        machineInfo.setModifyTime(date);
+        machineInfo.setAvailable(MachineInfoEnum.AvailableEnum.YES.getValue());
+        boolean isSuccess = machineDeployCenter.addMachine(machineInfo);
+        model.addAttribute("result", isSuccess);
         return new ModelAndView("");
     }
     
